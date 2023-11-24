@@ -1,6 +1,11 @@
-const express = require('express')
-const app = express()
-const port = 3000
+const express = require('express');
+const bodyParser = require('body-parser');
+const multer  = require('multer')
+const path = require('path')
+const app = express();
+const port = 3000;
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const data =[{
   id:1,
 name:"zeeshan",
@@ -15,70 +20,78 @@ email:"zeeshn@gml.com"
   },
   {
     id:3,
-    name:"zeeshan nawaz",
+    name:"zeeshan nawa",
     age:"18",
     email:"zeeshn@gml.com"
-    }]
+    }];
 
-app.post('/create',  (req, res) => {
-  try {
-    const { id } = req.body;
-    const user = data.find((item) => item.id === id);
-    if (user) {
-      // return res.send(user);
-        //  return res.send("user allready exist")
-        console.log("User All Ready Exists")
-        return res.json({ error: "User already exists" });
-    } else {
-      data.push(req.body);
-      return res.send(data);
-    }
-  } catch (error) {
-    console.log("server error", error);
-    return res.json({ error: "Internal server error" });
+
+app.post('/post', (req, res) => {
+
+  const postData = req.body;
+   postdataid=postData.id;
+  console.log( postdataid);
+  for (let index = 0; index < data.length; index++) {
+    console.log(data[index].id);
+    if(data[index].id==postdataid){
+      res.send("User already exist")
+    }  
   }
-})
+  data.push(postData)
+  res.send( data );
+});
 
-app.get('/get/:id',(req, res) => {
-  const findUser = data.find((item) => item.id === parseInt(req.params.id));
-  return res.send(findUser);
-} )
 app.delete('/delete/:id',  (req, res) => {
-  const { id } = req.params;
-  const newData = data.filter((item) => item.id !== parseInt(id));
-  return res.send(newData);
-})
-app.put('/update/:id', (req, res) => {
-  const { id, name, age, email } = req.body;
-  const findUser = data.find((item) => item.id === parseInt(req.params.id));
-  if (findUser) {
-    if (id) {
-      findUser.id = id;
+    const { id } = req.params;
+    const newData = data.filter((item) => item.id !== parseInt(id));
+     res.send(newData);
+  })
+  app.put('/update/:id', (req, res) => {
+      const { id, name, age, email } = req.body;
+      const findUser = data.find((item) => item.id === parseInt(req.params.id));
+      if (findUser) {
+        if (id) {
+          findUser.id = id;
+        }
+        if (name) {
+          findUser.name = name;
+        }
+        if (age) {
+          findUser.age = age;
+        }
+        if (email) {
+          findUser.email = email;
+        }
+       
+      }
+     
+      res.send(data);
     }
-    if (name) {
-      findUser.name = name;
-    }
-    if (age) {
-      findUser.age = age;
-    }
-    if (email) {
-      findUser.email = email;
-    }
-    // findUser.id = id;
-    // findUser.name = name;
-    // findUser.age = age;
-    // findUser.email = email
+    )
+    app.use('/', express.static(path.join(__dirname,'uploads')))
+
+
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
   }
-  // data.save(findUser)
-  res.send(data);
-}
-)
+})
+
+const upload = multer({ storage: storage })
 
 
-app.get('/', (req, res) => {
+app.post('/profile', upload.single('upload'), function (req, res, next) {
+  res.send("file uploaded")
+})
+app.get('/get', (req, res) => {
   res.send(data)
 })
-
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Server is listening on port ${port}`);
+});
+
